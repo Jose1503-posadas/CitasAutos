@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from vMisPub import Perfil
+from VnuevaPub import VentanaNuevoPost
 
 class VentanaUsuario(tk.Toplevel):
     def __init__(self, user):
@@ -39,8 +40,12 @@ class VentanaUsuario(tk.Toplevel):
         """Configurar el tamaño del canvas."""
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
+    """def mostrar_nuevo_post(self):
+        self.perfil.mostrar_nuevo_post()"""
     def mostrar_nuevo_post(self):
-        self.perfil.mostrar_nuevo_post()
+        ventana_nuevo_post = VentanaNuevoPost.obtener_instancia({'nombre': self.perfil.nombre_usuario})
+        ventana_nuevo_post.grab_set()  # Bloquea la interacción con otras ventanas
+
 
     def mostrar_perfil(self):
-        self.perfil.mostrar_perfil()
+        self.perfil.mostrar_perfil(
