@@ -15,9 +15,6 @@ class Perfil:
         self.frame_perfil = ttk.Frame(self.ventana_usuario.container)
         self.frame_perfil.pack()
 
-        nombre_label = ttk.Label(self.frame_perfil, text=f"Usuario: {self.nombre_usuario}")
-        nombre_label.pack()
-
         # Redimensionar la imagen del avatar
         try:
             avatar_image = Image.open(self.avatar)
@@ -26,7 +23,12 @@ class Perfil:
 
             avatar_label = ttk.Label(self.frame_perfil, image=avatar_photo)
             avatar_label.image = avatar_photo  # Mantener una referencia
-            avatar_label.pack()
+            avatar_label.grid(row=0, column=0, padx=10, pady=10)
+
+            nombre_label = ttk.Label(self.frame_perfil, text=f"{self.nombre_usuario}", font=('Arial', 12, 'bold'))
+            nombre_label.grid(row=0, column=1, padx=10, pady=10)
+
         except FileNotFoundError:
             error_label = ttk.Label(self.frame_perfil, text="Error: No se encontró la imagen.")
             error_label.pack()
+
