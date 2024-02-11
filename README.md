@@ -1,1 +1,1 @@
-# Mini x
+# Mini-X
