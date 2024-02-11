@@ -1,13 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 from vMisPub import Perfil
 from VnuevaPub import VentanaNuevoPost
+from publicaciones import Publicacion
 
 class VentanaUsuario(tk.Toplevel):
     def __init__(self, user):
         super().__init__()
-        self.title("Micro-X")
+        self.title("vPub")
         self.geometry("400x400")
+        self.perfil = Perfil(self, user['nombreUsuario'], user['avatar'])
 
         # Marco para los botones fijos
         self.frame_botones = ttk.Frame(self)
@@ -34,18 +37,30 @@ class VentanaUsuario(tk.Toplevel):
         self.container.bind("<Configure>", self.on_frame_configure)
 
         # Inicializar el gestor de publicaciones
-        self.perfil = Perfil(self, user['nombreUsuario'], user['avatar'])
+        self.publicacion_manager = Publicacion(self.container)
+
+        # Mostrar las publicaciones iniciales
+        self.actualizar_publicaciones()
 
     def on_frame_configure(self, event):
-        """Configurar el tamaño del canvas."""
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
-    """def mostrar_nuevo_post(self):
-        self.perfil.mostrar_nuevo_post()"""
     def mostrar_nuevo_post(self):
-        ventana_nuevo_post = VentanaNuevoPost.obtener_instancia({'nombre': self.perfil.nombre_usuario})
+        ventana_nuevo_post = VentanaNuevoPost(self, {'nombre': self.perfil.nombre_usuario})
         ventana_nuevo_post.grab_set()  # Bloquea la interacción con otras ventanas
+        ventana_nuevo_post.wait_window()  # Espera hasta que se cierre la ventana nueva post
 
+        # Llama a la función para actualizar las publicaciones cuando se publique un nuevo post
+        self.actualizar_publicaciones()
+
+    def actualizar_publicaciones(self):
+        self.publicacion_manager.actualizar_publicaciones()
 
     def mostrar_perfil(self):
-        self.perfil.mostrar_perfil(
+        self.perfil.mostrar_perfil()
+
+# Ejemplo de uso
+if __name__ == "__main__":
+    root = tk.Tk()
+    VentanaUsuario(root, {'nombreUsuario': 'Usuario de Ejemplo', 'avatar': 'avatar.jpg'})
+    root.mainloop()
