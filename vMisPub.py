@@ -31,4 +31,3 @@ class Perfil:
         except FileNotFoundError:
             error_label = ttk.Label(self.frame_perfil, text="Error: No se encontró la imagen.")
             error_label.pack()
-
