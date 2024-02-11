@@ -1,123 +1,135 @@
+import sqlite3
 import tkinter as tk
+from tkinter import ttk
 from PIL import Image, ImageTk
 
 COLOR_FONDO_CONTENEDOR = "dark violet"
 
-class Publicacion:
-    def __init__(self, nombre_usuario, avatar, fecha, contenido, imagen):
-        self.nombre_usuario = nombre_usuario
-        self.avatar = avatar
-        self.fecha = fecha
-        self.contenido = contenido
-        self.imagen = imagen
-
 class PublicacionBuilder:
     def __init__(self):
-        self.nombre_usuario = None
-        self.avatar = None
-        self.fecha = None
-        self.contenido = None
-        self.imagen = None
-
-    def with_usuario(self, nombre_usuario):
-        self.nombre_usuario = nombre_usuario
+        self.usuario = ""
+        self.fecha = ""
+        self.contenido = ""
+        self.imagen_path = ""
+    
+    def with_usuario(self, usuario):
+        self.usuario = usuario
         return self
-
-    def with_avatar(self, avatar):
-        self.avatar = avatar
-        return self
-
+    
     def with_fecha(self, fecha):
         self.fecha = fecha
         return self
-
+    
     def with_contenido(self, contenido):
         self.contenido = contenido
         return self
     
-    def with_imagen(self, imagen):
-        self.imagen = imagen
+    def with_imagen_path(self, imagen_path):
+        self.imagen_path = imagen_path
         return self
     
     def build(self):
-        return Publicacion(self.nombre_usuario, self.avatar, self.fecha, self.contenido, self.imagen)
+        return (self.usuario, self.fecha, self.contenido, self.imagen_path)
 
-class InterfazPublicacion:
-    def __init__(self):
-        self.publicacion = None
+class PublicacionDirector:
+    def construir_publicacion(self, builder, usuario, fecha, contenido, imagen_path=""):
+        return builder.with_usuario(usuario) \
+                      .with_fecha(fecha) \
+                      .with_contenido(contenido) \
+                      .with_imagen_path(imagen_path) \
+                      .build()
 
-    def crear_publicacion(self):
-        builder = PublicacionBuilder()
-        self.publicacion = builder.build()
+class Publicacion:
+    def __init__(self, container):
+        self.container = container
+        self.ventana_agrandada = None  # Para almacenar la ventana agrandada
+
+    def actualizar_publicaciones(self):
+        # Limpiar las publicaciones anteriores
+        for widget in self.container.winfo_children():
+            widget.destroy()
+
+        # Conectar a la base de datos y obtener las publicaciones
+        conn = sqlite3.connect("publicaciones.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT usuario, hora_fecha, contenido, imagen FROM publicaciones ORDER BY hora_fecha DESC")  # Seleccionar solo las columnas necesarias
+        publicaciones = cursor.fetchall()
+        conn.close()
+
+        # Mostrar las publicaciones en la ventana
+        for publicacion in publicaciones:
+            self.mostrar_publicacion(publicacion)
+
+    def mostrar_publicacion(self, publicacion):
+        usuario, fecha, contenido, imagen_path = publicacion
+
+        # Crear un marco para la publicación con fondo violeta
+        frame_publicacion = ttk.Frame(self.container, style="Custom.TFrame")
+        frame_publicacion.pack(pady=20, padx=90, fill="x")
+
+        # Establecer el estilo para el fondo violeta del contenedor
+        s = ttk.Style()
+        s.configure("Custom.TFrame", background=COLOR_FONDO_CONTENEDOR)
+
+        # Etiqueta para el nombre de usuario
+        nombre_label = tk.Label(frame_publicacion, text=usuario, font=("Arial", 20, "bold"), bg=COLOR_FONDO_CONTENEDOR, fg="white")
+        nombre_label.grid(row=0, column=0, sticky="w")
+
+        # Etiqueta para la fecha (solo la parte de la fecha)
+        fecha_solo = fecha.split()[1]  # Extraer solo la parte de la fecha
+        tk.Label(frame_publicacion, text=f"Fecha: {fecha_solo}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=1, column=0, sticky="w")
         
-    def crear_interfaz_grafica(self):
-        root = tk.Tk()
-        contenedor = tk.LabelFrame(root, padx=10, pady=10, borderwidth=2, relief="groove", bg=COLOR_FONDO_CONTENEDOR, fg="white")
-        contenedor.pack(padx=10, pady=25)
-
-        if self.publicacion.avatar:
-            imagen = Image.open(self.publicacion.avatar)
-            imagen = imagen.resize((50, 50), Image.BILINEAR)
-            imagen_tk = ImageTk.PhotoImage(imagen)
-            imagen_label = tk.Label(contenedor, image=imagen_tk, bg=COLOR_FONDO_CONTENEDOR, fg="white")
-            imagen_label.image = imagen_tk
-            imagen_label.grid(row=0, column=0, sticky="w")
-            nombre_label = tk.Label(contenedor, text=self.publicacion.nombre_usuario, font=("Arial", 20, "bold"), bg=COLOR_FONDO_CONTENEDOR, fg="white")
-            nombre_label.grid(row=0, column=1, sticky="w")
-        else:
-            nombre_label = tk.Label(contenedor, text=self.publicacion.nombre_usuario, font=("Arial", 20, "bold"), bg=COLOR_FONDO_CONTENEDOR, fg="white")
-            nombre_label.grid(row=0, column=0, columnspan=2, sticky="w")
-
-        tk.Label(contenedor, text=f"Fecha: {self.publicacion.fecha}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=1, column=0, columnspan=2, sticky="w")
-        tk.Label(contenedor, text=f"Contenido: {self.publicacion.contenido}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=2, column=0, columnspan=2, sticky="w")
-
-        if self.publicacion.imagen:
-            imagenContent = Image.open(self.publicacion.imagen)
+        # Etiqueta para el contenido
+        tk.Label(frame_publicacion, text=f"Contenido: {contenido}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=2, column=0, sticky="w")
+        
+        # Etiqueta para la imagen si está presente
+        if imagen_path:
+            imagenContent = Image.open(imagen_path)
             imagenContent = imagenContent.resize((200, 200), Image.BILINEAR)
             imagen_tk = ImageTk.PhotoImage(imagenContent)
-            imagen_label = tk.Label(contenedor, image=imagen_tk, bg=COLOR_FONDO_CONTENEDOR, fg="white")
+            imagen_label = tk.Label(frame_publicacion, image=imagen_tk, bg=COLOR_FONDO_CONTENEDOR, fg="white")
             imagen_label.image = imagen_tk
             imagen_label.grid(row=3, column=0, columnspan=2)
-
-        boton_agrandar = tk.Button(contenedor, text="Agrandar", command=self.abrir_ventana_agrandada)
+        
+        # Botón para agrandar
+        boton_agrandar = tk.Button(frame_publicacion, text="Agrandar", command=lambda pub=publicacion: self.abrir_ventana_agrandada(pub))
         boton_agrandar.grid(row=4, column=0, columnspan=2, sticky="we", padx=5, pady=5)
 
-        root.mainloop()
+    def abrir_ventana_agrandada(self, publicacion):
+        # Cerrar la ventana agrandada si ya está abierta
+        if self.ventana_agrandada:
+            self.ventana_agrandada.destroy()
 
-    def abrir_ventana_agrandada(self):
-        ventana_agrandada = tk.Toplevel()
-        ventana_agrandada.title("Publicación")
+        # Crear una nueva ventana
+        self.ventana_agrandada = tk.Toplevel()
+        self.ventana_agrandada.title("vPubDetalle")
+        self.ventana_agrandada.geometry("400x300")
+        
+        # Mostrar el contenido de la publicación en la ventana agrandada
+        usuario, fecha, contenido, imagen_path = publicacion
+        tk.Label(self.ventana_agrandada, text=f"Usuario: {usuario}").pack()
+        fecha_solo = fecha.split()[1]
+        tk.Label(self.ventana_agrandada, text=f"Fecha: {fecha_solo}").pack()
+        tk.Label(self.ventana_agrandada, text=f"Contenido: {contenido}").pack()
+        if imagen_path:
+            imagenContent = Image.open(imagen_path)
+            imagenContent = imagenContent.resize((200, 200), Image.BILINEAR)
+            imagen_tk = ImageTk.PhotoImage(imagenContent)
+            imagen_label = tk.Label(self.ventana_agrandada, image=imagen_tk)
+            imagen_label.image = imagen_tk
+            imagen_label.pack()
 
-        contenedor_agrandado = tk.LabelFrame(ventana_agrandada, padx=10, pady=10, borderwidth=2, relief="groove", bg=COLOR_FONDO_CONTENEDOR, fg="white")
-        contenedor_agrandado.pack(padx=10, pady=25)
+# Ejemplo de uso
+if __name__ == "__main__":
+    root = tk.Tk()
+    container = ttk.Frame(root)
+    container.pack(fill="both", expand=True, padx=20, pady=20)  # Ajusta los márgenes externos
 
-        tk.Label(contenedor_agrandado, text=f"Nombre de usuario: {self.publicacion.nombre_usuario}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=0, column=0, columnspan=2, sticky="w")
-        tk.Label(contenedor_agrandado, text=f"Fecha: {self.publicacion.fecha}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=1, column=0, columnspan=2, sticky="w")
-        tk.Label(contenedor_agrandado, text=f"Contenido: {self.publicacion.contenido}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=2, column=0, columnspan=2, sticky="w")
+    # Ajusta el ancho máximo del contenedor
+    container.pack_propagate(False)
 
-        if self.publicacion.imagen:
-            imagen_content_agrandada = Image.open(self.publicacion.imagen)
-            imagen_content_agrandada = imagen_content_agrandada.resize((400, 400), Image.BILINEAR)
-            imagen_tk_agrandada = ImageTk.PhotoImage(imagen_content_agrandada)
+    # Crear instancia de la clase Publicacion
+    publicacion = Publicacion(container)
+    publicacion.actualizar_publicaciones()
 
-            imagen_label_agrandada = tk.Label(contenedor_agrandado, image=imagen_tk_agrandada, bg=COLOR_FONDO_CONTENEDOR, fg="white")
-            imagen_label_agrandada.image = imagen_tk_agrandada
-            imagen_label_agrandada.grid(row=3, column=0, columnspan=2)
-
-# Crear una instancia de PublicacionBuilder con los valores deseados
-builder = PublicacionBuilder().with_usuario("Usuario1") \
-                               .with_avatar("/Users/joseposadas/Desktop/uam/MiniX-1/imagenes/imagen3.jpg") \
-                               .with_fecha("2024-02-11") \
-                               .with_contenido("Este es el contenido de la publicación") \
-                               .with_imagen("/Users/joseposadas/Desktop/uam/MiniX-1/imagenes/imagen4.jpg")
-
-# Construir la publicación con los valores proporcionados
-publicacion = builder.build()
-
-# Crear una instancia de InterfazPublicacion y establecer la publicación
-interfaz_publicacion = InterfazPublicacion()
-interfaz_publicacion.publicacion = publicacion
-
-# Crear la interfaz gráfica
-interfaz_publicacion.crear_interfaz_grafica()
-
+    root.mainloop()
