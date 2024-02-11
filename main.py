@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import sqlite3
-from PIL import Image, ImageTk
 from datetime import datetime
 from vPub import VentanaUsuario
 
