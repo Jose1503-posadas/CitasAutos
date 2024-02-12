@@ -31,7 +31,7 @@ class VentanaUsuario(tk.Toplevel):
 
         # Contenedor para los elementos
         self.container = ttk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=self.container, anchor="nw")
+        self.canvas.create_window((60, 60), window=self.container, anchor="nw")
 
         # Ajustar tamaño del canvas al contenedor
         self.container.bind("<Configure>", self.on_frame_configure)
@@ -56,11 +56,27 @@ class VentanaUsuario(tk.Toplevel):
     def actualizar_publicaciones(self):
         self.publicacion_manager.actualizar_publicaciones()
 
+    """ def mostrar_perfil(self):
+        self.perfil.mostrar_perfil()"""
     def mostrar_perfil(self):
+        # Limpiar el contenedor principal
+        for widget in self.container.winfo_children():
+            widget.destroy()
+
+        # Crear el frame del perfil dentro del contenedor principal
+        self.frame_perfil = ttk.Frame(self.container)
+        self.frame_perfil.pack(fill="both", expand=True)
+
+        # Mostrar el perfil en el nuevo frame
         self.perfil.mostrar_perfil()
 
-# Ejemplo de uso
-if __name__ == "__main__":
-    root = tk.Tk()
-    VentanaUsuario(root, {'nombreUsuario': 'Usuario de Ejemplo', 'avatar': 'avatar.jpg'})
-    root.mainloop()
+        # Agregar un botón para regresar a la página principal
+        btn_regresar = ttk.Button(self.frame_perfil, text="Regresar", command=self.regresar_pagina_principal)
+        btn_regresar.pack(side="bottom", pady=10)
+
+    def regresar_pagina_principal(self):
+        # Destruir el frame del perfil
+        self.frame_perfil.destroy()
+        # Volver a mostrar las publicaciones
+        self.actualizar_publicaciones()
+
