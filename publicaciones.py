@@ -119,17 +119,3 @@ class Publicacion:
             imagen_label.image = imagen_tk
             imagen_label.pack()
 
-# Ejemplo de uso
-if __name__ == "__main__":
-    root = tk.Tk()
-    container = ttk.Frame(root)
-    container.pack(fill="both", expand=True, padx=20, pady=20)  # Ajusta los márgenes externos
-
-    # Ajusta el ancho máximo del contenedor
-    container.pack_propagate(False)
-
-    # Crear instancia de la clase Publicacion
-    publicacion = Publicacion(container)
-    publicacion.actualizar_publicaciones()
-
-    root.mainloop()
