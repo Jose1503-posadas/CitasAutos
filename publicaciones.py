@@ -197,5 +197,3 @@ class MiPublicacion:
             imagen_label = tk.Label(self.ventana_agrandada, image=imagen_tk)
             imagen_label.image = imagen_tk
             imagen_label.pack()
-
-
