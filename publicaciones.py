@@ -63,24 +63,24 @@ class Publicacion:
     def mostrar_publicacion(self, publicacion):
         usuario, fecha, contenido, imagen_path = publicacion
 
-        # Crear un marco para la publicación con fondo violeta
+        # Crear un marco para la publicación
         frame_publicacion = ttk.Frame(self.container, style="Custom.TFrame")
-        frame_publicacion.pack(pady=20, padx=90, fill="x")
+        frame_publicacion.pack(pady=20, padx=20, fill="both")
 
-        # Establecer el estilo para el fondo violeta del contenedor
+        # Establecer el estilo para el fondo
         s = ttk.Style()
         s.configure("Custom.TFrame", background=COLOR_FONDO_CONTENEDOR)
 
         # Etiqueta para el nombre de usuario
         nombre_label = tk.Label(frame_publicacion, text=usuario, font=("Arial", 20, "bold"), bg=COLOR_FONDO_CONTENEDOR, fg="white")
-        nombre_label.grid(row=0, column=0, sticky="w")
+        nombre_label.pack(fill="x")  # Hacer que la etiqueta se expanda horizontalmente
 
         # Etiqueta para la fecha (solo la parte de la fecha)
         fecha_solo = fecha.split()[1]  # Extraer solo la parte de la fecha
-        tk.Label(frame_publicacion, text=f"Fecha: {fecha_solo}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=1, column=0, sticky="w")
+        tk.Label(frame_publicacion, text=f"Fecha: {fecha_solo}", bg=COLOR_FONDO_CONTENEDOR, fg="white").pack(fill="x")
         
         # Etiqueta para el contenido
-        tk.Label(frame_publicacion, text=f"Contenido: {contenido}", bg=COLOR_FONDO_CONTENEDOR, fg="white").grid(row=2, column=0, sticky="w")
+        tk.Label(frame_publicacion, text=f"Contenido: {contenido}", bg=COLOR_FONDO_CONTENEDOR, fg="white").pack(fill="x")
         
         # Etiqueta para la imagen si está presente
         if imagen_path:
@@ -89,11 +89,11 @@ class Publicacion:
             imagen_tk = ImageTk.PhotoImage(imagenContent)
             imagen_label = tk.Label(frame_publicacion, image=imagen_tk, bg=COLOR_FONDO_CONTENEDOR, fg="white")
             imagen_label.image = imagen_tk
-            imagen_label.grid(row=3, column=0, columnspan=2)
+            imagen_label.pack(fill="both", expand=True)  # Hacer que la imagen se expanda horizontal y verticalmente
         
         # Botón para agrandar
         boton_agrandar = tk.Button(frame_publicacion, text="Agrandar", command=lambda pub=publicacion: self.abrir_ventana_agrandada(pub))
-        boton_agrandar.grid(row=4, column=0, columnspan=2, sticky="we", padx=5, pady=5)
+        boton_agrandar.pack(fill="x")
 
     def abrir_ventana_agrandada(self, publicacion):
         # Cerrar la ventana agrandada si ya está abierta
@@ -118,4 +118,84 @@ class Publicacion:
             imagen_label = tk.Label(self.ventana_agrandada, image=imagen_tk)
             imagen_label.image = imagen_tk
             imagen_label.pack()
+
+class MiPublicacion:
+    def __init__(self, container):
+        self.container = container
+        self.ventana_agrandada = None  # Para almacenar la ventana agrandada
+
+    def actualizar_publicaciones(self):
+        # Limpiar las publicaciones anteriores
+        for widget in self.container.winfo_children():
+            widget.destroy()
+
+        # Conectar a la base de datos y obtener las publicaciones del usuario específico
+        conn = sqlite3.connect("publicaciones.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT usuario, hora_fecha, contenido, imagen FROM publicaciones WHERE usuario = ? ORDER BY hora_fecha DESC")
+        publicaciones = cursor.fetchall()
+        conn.close()
+
+        # Mostrar las publicaciones en la ventana
+        for publicacion in publicaciones:
+            self.mostrar_publicacion(publicacion)
+
+    def mostrar_publicacion(self, publicacion):
+        usuario, fecha, contenido, imagen_path = publicacion
+
+        # Crear un marco para la publicación
+        frame_publicacion = ttk.Frame(self.container, style="Custom.TFrame")
+        frame_publicacion.pack(pady=20, padx=20, fill="both")
+
+        # Establecer el estilo para el fondo
+        s = ttk.Style()
+        s.configure("Custom.TFrame", background=COLOR_FONDO_CONTENEDOR)
+
+        # Etiqueta para el nombre de usuario
+        nombre_label = tk.Label(frame_publicacion, text=usuario, font=("Arial", 20, "bold"), bg=COLOR_FONDO_CONTENEDOR, fg="white")
+        nombre_label.pack(fill="x")  # Hacer que la etiqueta se expanda horizontalmente
+
+        fecha_solo = fecha.split()[1]
+        tk.Label(frame_publicacion, text=f"Fecha: {fecha_solo}", bg=COLOR_FONDO_CONTENEDOR, fg="white").pack(fill="x")
+        
+        # Etiqueta para el contenido
+        tk.Label(frame_publicacion, text=f"Contenido: {contenido}", bg=COLOR_FONDO_CONTENEDOR, fg="white").pack(fill="x")
+        
+        # Etiqueta para la imagen si está presente
+        if imagen_path:
+            imagenContent = Image.open(imagen_path)
+            imagenContent = imagenContent.resize((200, 200), Image.BILINEAR)
+            imagen_tk = ImageTk.PhotoImage(imagenContent)
+            imagen_label = tk.Label(frame_publicacion, image=imagen_tk, bg=COLOR_FONDO_CONTENEDOR, fg="white")
+            imagen_label.image = imagen_tk
+            imagen_label.pack(fill="both", expand=True)  # Hacer que la imagen se expanda horizontal y verticalmente
+        
+        # Botón para agrandar
+        boton_agrandar = tk.Button(frame_publicacion, text="Agrandar", command=lambda pub=publicacion: self.abrir_ventana_agrandada(pub))
+        boton_agrandar.pack(fill="x")
+
+    def abrir_ventana_agrandada(self, publicacion):
+        # Cerrar la ventana agrandada si ya está abierta
+        if self.ventana_agrandada:
+            self.ventana_agrandada.destroy()
+
+        # Crear una nueva ventana
+        self.ventana_agrandada = tk.Toplevel()
+        self.ventana_agrandada.title("vPubDetalle")
+        self.ventana_agrandada.geometry("400x300")
+        
+        # Mostrar el contenido de la publicación en la ventana agrandada
+        usuario, fecha, contenido, imagen_path = publicacion
+        tk.Label(self.ventana_agrandada, text=f"Usuario: {usuario}").pack()
+        fecha_solo = fecha.split()[1]
+        tk.Label(self.ventana_agrandada, text=f"Fecha: {fecha_solo}").pack()
+        tk.Label(self.ventana_agrandada, text=f"Contenido: {contenido}").pack()
+        if imagen_path:
+            imagenContent = Image.open(imagen_path)
+            imagenContent = imagenContent.resize((200, 200), Image.BILINEAR)
+            imagen_tk = ImageTk.PhotoImage(imagenContent)
+            imagen_label = tk.Label(self.ventana_agrandada, image=imagen_tk)
+            imagen_label.image = imagen_tk
+            imagen_label.pack()
+
 
