@@ -4,7 +4,6 @@ from PIL import Image, ImageTk
 import sqlite3
 from datetime import datetime
 
-
 class VentanaNuevoPost(tk.Toplevel):
     def __init__(self, parent, usuario):
         super().__init__(parent)
@@ -18,7 +17,7 @@ class VentanaNuevoPost(tk.Toplevel):
         self.lbl_post = ttk.Label(self, text="Escribe tu publicación:")
         self.lbl_post.pack(pady=10)
 
-        # Campo de texto para el post
+        # Campo de texto para la publicacion
         self.entry_post = tk.Text(self, width=30, height=3)  # Ajusta el height según tu preferencia
         self.entry_post.pack()
 
