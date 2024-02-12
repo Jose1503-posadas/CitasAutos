@@ -79,4 +79,3 @@ class VentanaUsuario(tk.Toplevel):
         self.frame_perfil.destroy()
         # Volver a mostrar las publicaciones
         self.actualizar_publicaciones()
-
