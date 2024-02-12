@@ -19,7 +19,7 @@ class VentanaUsuario(tk.Toplevel):
         # Botones
         self.btn_nuevo_post = ttk.Button(self.frame_botones, text="Nuevo Post", command=self.mostrar_nuevo_post)
         self.btn_perfil = ttk.Button(self.frame_botones, text="Perfil", command=self.mostrar_perfil)
-        self.btn_nuevo_post.pack(side="left", padx=(20, 10), pady=5)
+        self.btn_nuevo_post.pack(side="left", padx=(50, 10), pady=5)
         self.btn_perfil.pack(side="left", padx=(140, 5), pady=5)
 
         # Configurar el Canvas y el Scrollbar
