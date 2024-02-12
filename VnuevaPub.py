@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import sqlite3
 from datetime import datetime
 
+
 class VentanaNuevoPost(tk.Toplevel):
     def __init__(self, parent, usuario):
         super().__init__(parent)
