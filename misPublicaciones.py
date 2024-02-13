@@ -5,6 +5,24 @@ from PIL import Image, ImageTk
 
 COLOR_FONDO_CONTENEDOR = "dark violet"
 
+# Conectar a la base de datos (si no existe, se creará)
+conn = sqlite3.connect("publicaciones.db")
+cursor = conn.cursor()
+
+# Crear la tabla "acciones" si no existe
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS acciones (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario TEXT NOT NULL,
+        accion TEXT NOT NULL,
+        fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
+
+# Guardar los cambios y cerrar la conexión
+conn.commit()
+conn.close()
+
 class miPublicacion:
     def __init__(self, container, observer):  # Agrega observer como parámetro
         self.container = container
@@ -94,7 +112,15 @@ class miPublicacion:
             conn.close()
             # Notificar al observador sobre la eliminación
             self.observer.actualizar_publicaciones()
+            self.registrar_accion("Eliminación de publicación")  # Registra la acción al eliminar la publicación
             self.destroy()
+
+        def registrar_accion(self, accion):
+            conn = sqlite3.connect("publicaciones.db")
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO acciones (usuario, accion, fecha) VALUES (?, ?, CURRENT_TIMESTAMP)", (self.usuario, accion))
+            conn.commit()
+            conn.close()
     class VentanaEditarPublicacion(tk.Toplevel):
         def __init__(self, observer, usuario, fecha, contenido):
             super().__init__()
@@ -126,4 +152,12 @@ class miPublicacion:
             conn.commit()
             conn.close()
             self.observer.actualizar_publicaciones()
+            self.registrar_accion("Edición de publicación")  # Registra la acción al editar la publicación
             self.destroy()
+
+        def registrar_accion(self, accion):
+            conn = sqlite3.connect("publicaciones.db")
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO acciones (usuario, accion, fecha) VALUES (?, ?, CURRENT_TIMESTAMP)", (self.usuario, accion))
+            conn.commit()
+            conn.close()
