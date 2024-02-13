@@ -70,22 +70,15 @@ class VentanaNuevoPost(tk.Toplevel):
                             usuario TEXT,
                             hora_fecha TEXT,
                             contenido TEXT,
-                            imagen TEXT
+                            imagen TEXT,
+                            estado int
                         )''')
 
         # Insertar los datos en la tabla
-        cursor.execute("INSERT INTO publicaciones (usuario, hora_fecha, contenido, imagen) VALUES (?, ?, ?, ?)",
-                       (self.usuario['nombre'], hora_fecha_actual, texto_post, self.avatar_path.get()))
-
+        cursor.execute("INSERT INTO publicaciones (usuario, hora_fecha, contenido, imagen, estado) VALUES (?, ?, ?, ?,?)",
+                       (self.usuario['nombre'], hora_fecha_actual, texto_post, self.avatar_path.get(),'0'))
         # Guardar los cambios y cerrar la conexión
         conn.commit()
         conn.close()
-
         # Cerrar la ventana después de publicar
         self.destroy()
-
-# Ejemplo de uso
-if __name__ == "__main__":
-    root = tk.Tk()
-    VentanaNuevoPost(root, {'nombre': 'Usuario de Ejemplo'})
-    root.mainloop()
