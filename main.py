@@ -6,8 +6,10 @@ from vPub import VentanaUsuario
 
 class Modelo:
     def __init__(self):
+        #Conexiones a la base de datos
         self.conn = sqlite3.connect("database.db")
         self.conn_log = sqlite3.connect("login.db")
+        #Métodos para crear las tablas
         self.crearTablaUsuarios()
         self.crearTablaLogin()
 
@@ -19,6 +21,7 @@ class Modelo:
                             nombreUsuario TEXT UNIQUE,
                             password TEXT,
                             avatar TEXT)''')
+        #Confirma transaccion
         self.conn.commit()
     
     # Crear tabla de login
@@ -40,9 +43,10 @@ class Modelo:
             avatar = user[3]          # El cuarto elemento contiene el avatar
             return {'nombreUsuario': nombreUsuario, 'avatar': avatar}
         else:
+            #Si no se encuentra regresa none
             return None
 
-
+    #Inserta nuevo usuario en la BD, tabla usuarios
     def registroUsuarioBD(self, nombreUsuario, password, avatar):
         cursor = self.conn.cursor()
         try:
@@ -52,15 +56,18 @@ class Modelo:
         except sqlite3.IntegrityError:
             return False
 
+    #registrar el inicio de sesión de un usuario en una base de datos
     def login(self, nombreUsuario):
         FechaHora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor = self.conn_log.cursor()
         cursor.execute("INSERT INTO login (nombreUsuario, FechaHora) VALUES (?, ?)", (nombreUsuario, FechaHora))
         self.conn_log.commit()
 
+#Subclase de la principal, da funcioanlidades para ventanas 
 class Vista(tk.Tk):
     def __init__(self, controlador):
         super().__init__()
+        #Comunicacion con el controlador
         self.controlador = controlador
         self.title("Micro-X")
         self.geometry("400x250")
@@ -77,6 +84,7 @@ class Vista(tk.Tk):
         self.controlador.mostrarLogin(self.login_tab)
         self.controlador.mostrarRegistro(self.register_tab)
 
+    #Metodo para mostrar y ocultar ventana
     def mostrarUsuario(self, user):
         self.login_tab.pack_forget()  # Oculta la pestaña de inicio de sesión
         self.controlador.mostrarUsuario(user)  # Muestra la ventana de usuario
@@ -102,6 +110,7 @@ class Controlador:
 
 
 class VentanaLogin:
+    #Metodo constructor 
     def __init__(self, parent, controlador):
         self.parent = parent
         self.controlador = controlador
@@ -115,13 +124,14 @@ class VentanaLogin:
         self.password_entry = ttk.Entry(parent, show="*")
         self.password_entry.pack()
 
-        self.login_button = ttk.Button(parent, text="Iniciar Sesión", command=self.validarInicioSesion)
+        self.login_button = ttk.Button(parent, text="Iniciar Sesión", command=self.InicioSesion)
         self.login_button.pack()
 
-    def validarInicioSesion(self):
+    #Metodo cuando hace clic en boton "INICIO DE SESION"
+    def InicioSesion(self):
         nombreUsuario = self.username_entry.get()
         password = self.password_entry.get()
-
+        #Llama a metodo validarLogin()
         user = self.controlador.modelo.validarLogin(nombreUsuario, password)
 
         if user:
@@ -156,16 +166,19 @@ class VentanaRegistro:
         self.registrar_button = ttk.Button(parent, text="Registrarse", command=self.registrarUsuario)
         self.registrar_button.pack()
     
+    #Metodo para cuando el usuario elige "SELECCIONA IMAGEN"
     def eligeAvatar(self):
         ruta_imagen = filedialog.askopenfilename()
         if ruta_imagen:
             self.avatar_path.set(ruta_imagen)
 
+    #Clic en boton de "REGISTRO"
     def registrarUsuario(self):
         nombreUsuario = self.username_entry.get()
         password = self.password_entry.get()
         avatar = self.avatar_path.get()
 
+        #Llama al metodo de registroBD para registrarlo en la BD
         registrado = self.controlador.modelo.registroUsuarioBD(nombreUsuario, password, avatar)
 
         if registrado:
