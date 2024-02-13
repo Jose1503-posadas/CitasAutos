@@ -4,6 +4,28 @@ from PIL import Image, ImageTk
 import sqlite3
 from datetime import datetime
 
+class PublicacionStrategy:
+    def publicar(self, usuario, texto, imagen_path):
+        raise NotImplementedError("Subclases deben implementar el método 'publicar'.")
+
+class PublicacionSimple(PublicacionStrategy):
+    def publicar(self, usuario, texto, imagen_path):
+        hora_fecha_actual = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
+        conn = sqlite3.connect("publicaciones.db")
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS publicaciones (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            usuario TEXT,
+                            hora_fecha TEXT,
+                            contenido TEXT,
+                            imagen TEXT,
+                            estado int
+                        )''')
+        cursor.execute("INSERT INTO publicaciones (usuario, hora_fecha, contenido, imagen, estado) VALUES (?, ?, ?, ?,?)",
+                       (usuario['nombre'], hora_fecha_actual, texto, imagen_path, '0'))
+        conn.commit()
+        conn.close()
+
 class VentanaNuevoPost(tk.Toplevel):
     def __init__(self, parent, usuario):
         super().__init__(parent)
@@ -11,25 +33,22 @@ class VentanaNuevoPost(tk.Toplevel):
         self.geometry("400x350")
 
         self.usuario = usuario
+        self.estrategia_publicacion = PublicacionSimple()  # Estrategia por defecto
+
         self.avatar_path = tk.StringVar()
 
-        # Etiqueta para el texto del post
         self.lbl_post = ttk.Label(self, text="Escribe tu publicación:")
         self.lbl_post.pack(pady=10)
 
-        # Campo de texto para la publicacion
-        self.entry_post = tk.Text(self, width=30, height=3)  # Ajusta el height según tu preferencia
+        self.entry_post = tk.Text(self, width=30, height=3)
         self.entry_post.pack()
 
-        # Botón para adjuntar imagen
         self.btn_adjuntar_imagen = ttk.Button(self, text="Adjuntar Imagen", command=self.cargar_avatar)
         self.btn_adjuntar_imagen.pack(pady=5)
 
-        # Etiqueta para mostrar la imagen seleccionada
         self.lbl_avatar = ttk.Label(self)
         self.lbl_avatar.pack()
 
-        # Botones de Publicar y Cancelar
         self.frame_botones = ttk.Frame(self)
         self.frame_botones.pack(pady=5)
 
@@ -55,30 +74,6 @@ class VentanaNuevoPost(tk.Toplevel):
             self.lbl_avatar.image = self.avatar_photo
 
     def publicar(self):
-        texto_post = self.entry_post.get("1.0", tk.END)  # Obtener el contenido del Text widget
-        
-        # Obtener la hora y la fecha actual
-        hora_fecha_actual = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
-
-        # Conectar a la base de datos
-        conn = sqlite3.connect("publicaciones.db")
-        cursor = conn.cursor()
-
-        # Crear la tabla si no existe
-        cursor.execute('''CREATE TABLE IF NOT EXISTS publicaciones (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            usuario TEXT,
-                            hora_fecha TEXT,
-                            contenido TEXT,
-                            imagen TEXT,
-                            estado int
-                        )''')
-
-        # Insertar los datos en la tabla
-        cursor.execute("INSERT INTO publicaciones (usuario, hora_fecha, contenido, imagen, estado) VALUES (?, ?, ?, ?,?)",
-                       (self.usuario['nombre'], hora_fecha_actual, texto_post, self.avatar_path.get(),'0'))
-        # Guardar los cambios y cerrar la conexión
-        conn.commit()
-        conn.close()
-        # Cerrar la ventana después de publicar
+        texto_post = self.entry_post.get("1.0", tk.END)
+        self.estrategia_publicacion.publicar(self.usuario, texto_post, self.avatar_path.get())
         self.destroy()
