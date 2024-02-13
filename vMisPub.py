@@ -5,7 +5,7 @@ from tkinter import messagebox
 
 # Importar la clase Publicacion o MiPublicacion según sea necesario
 from misPublicaciones import miPublicacion
-# o from nombre_de_tu_archivo import MiPublicacion
+
 
 class Perfil:
     def __init__(self, ventana_usuario, nombre_usuario, avatar):
@@ -14,11 +14,12 @@ class Perfil:
         self.avatar = avatar
         self.publicaciones_usuario = []  
         self.frame_perfil = None
+        self.observer = ventana_usuario  # Aquí asumimos que la ventana de usuario es el observador
 
     def cargar_publicaciones_usuario(self):
         conn = sqlite3.connect("publicaciones.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT usuario, hora_fecha, contenido, imagen FROM publicaciones WHERE usuario = ? ORDER BY hora_fecha DESC", (self.nombre_usuario,))
+        cursor.execute("SELECT usuario, hora_fecha, contenido, imagen FROM publicaciones WHERE usuario = ? AND estado = 0 ORDER BY hora_fecha DESC",(self.nombre_usuario,))
         self.publicaciones_usuario = cursor.fetchall()
         conn.close()
 
@@ -50,10 +51,8 @@ class Perfil:
             error_label = ttk.Label(self.frame_perfil, text="Error: No se encontró la imagen.")
             error_label.pack()
 
-        # Crear una instancia de la clase Publicacion o MiPublicacion según necesites
-        publicacion_viewer = miPublicacion(self.frame_perfil)
-        # o publicacion_viewer = MiPublicacion(self.frame_perfil)
-
-        # Mostrar las publicaciones en el perfil
+        # Crear una instancia de la clase miPublicacion y pasar el observador
+        publicacion_viewer = miPublicacion(self.frame_perfil, self.observer)
+        # Mostrar las publicaciones en el perfil 
         for publicacion in self.publicaciones_usuario:
-            publicacion_viewer.mostrar_publicacion(publicacion)
+            publicacion_viewer.mostrar_publicacion(publicacion, self.observer)
